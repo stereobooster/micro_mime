@@ -1,5 +1,9 @@
 require "bundler/gem_tasks"
+require "rake/extensiontask"
 require "rake/testtask"
+
+spec = Gem::Specification.load("micro_mime.gemspec")
+Rake::ExtensionTask.new("MicroMime", spec)
 
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
@@ -7,31 +11,13 @@ Rake::TestTask.new(:test) do |t|
   t.test_files = FileList['test/**/*_test.rb']
 end
 
+Rake::Task[:test].prerequisites << :compile
+
 task :default => :test
 
-def pad(array)
-  max = []
-  array.each do |row|
-    i = 0
-    row.each do |col|
-      max[i] = [max[i] || 0, col.length].max
-      i += 1
-    end
-  end
-
-  array.each do |row|
-    i = 0
-    row.each do |col|
-      col << " " * (max[i] - col.length)
-      i += 1
-    end
-  end
-
-end
-
-desc "generate mime type database"
+desc "generate mime type header files"
 task :rebuild_db do
-  puts "Generating mime type DB"
+  puts "Generating mime type header files"
   require 'mime/types'
   index = {}
 
@@ -52,31 +38,41 @@ task :rebuild_db do
     buffer << [ext.dup, mime_type.content_type.dup, mime_type.encoding.dup]
   end
 
-  pad(buffer)
-
   buffer.sort!{|a,b| a[0] <=> b[0]}
 
-  File.open("lib/db/ext_mime.db", File::CREAT|File::TRUNC|File::RDWR) do |f|
+  file_name = "ExtMime"
+  gperf_file_name = "ext/MicroMime/#{file_name}.gperf"
+  template_file_name = "ext/MicroMime/#{file_name}.template"
+  header_file_name = "ext/MicroMime/#{file_name}.h"
+  %x(rm gperf_file_name)
+  %x(cp #{template_file_name} #{gperf_file_name})
+  buffer.sort!{|a,b| [a[1], a[0]] <=> [b[1], b[0]]}
+  File.open(gperf_file_name, "a") do |f|
     buffer.each do |row|
-      f.write "#{row[0]} #{row[1]} #{row[2]}\n"
+      f.write "\n#{row[0]}, #{row[1].inspect}, #{row[2].inspect}"
     end
   end
+  puts "#{buffer.count} rows written to #{gperf_file_name}"
+  %x(gperf -CD -t #{gperf_file_name} --output-file #{header_file_name})
 
-  puts "#{buffer.count} rows written to lib/db/ext_mime.db"
-
+  file_name = "ContentTypeMime"
+  gperf_file_name = "ext/MicroMime/#{file_name}.gperf"
+  template_file_name = "ext/MicroMime/#{file_name}.template"
+  header_file_name = "ext/MicroMime/#{file_name}.h"
+  %x(rm gperf_file_name)
+  %x(cp #{template_file_name} #{gperf_file_name})
   buffer.sort!{|a,b| [a[1], a[0]] <=> [b[1], b[0]]}
-
-  File.open("lib/db/content_type_mime.db", File::CREAT|File::TRUNC|File::RDWR) do |f|
+  File.open(gperf_file_name, "a") do |f|
     last = nil
     count = 0
     buffer.each do |row|
       unless last == row[1]
-        f.write "#{row[0]} #{row[1]} #{row[2]}\n"
+        f.write "\n#{row[1]}, #{row[0].inspect}, #{row[2].inspect}"
         count += 1
       end
       last = row[1]
     end
-    puts "#{count} rows written to lib/db/content_type_mime.db"
+    puts "#{count} rows written to #{gperf_file_name}"
   end
-
+  %x(gperf -CD -t #{gperf_file_name} --output-file #{header_file_name})
 end

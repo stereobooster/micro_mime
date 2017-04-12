@@ -20,13 +20,13 @@
 
 %language=ANSI-C
 %define slot-name extension
-%define hash-function-name content_type_extension_hash
-%define lookup-function-name lookup_content_type_by_extension
+%define hash-function-name lookup_by_extension_hash
+%define lookup-function-name lookup_by_extension_internal
 %enum
 %switch=4
-struct ContentTypeExtension {
-	const char * extension;
-	const char * content_type;
+struct ExtMime {
+  const char * extension;
+  const char * content_type;
+  const char * encoding;
 };
-%%<?r extensions.each do |extension, content_type| ?>
-#{extension}, #{content_type.inspect}<?r end ?>
+%%

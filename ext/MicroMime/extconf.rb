@@ -22,7 +22,7 @@
 require 'mkmf'
 
 # Give it a name
-extension_name = 'MimeTypesMiniDatabase'
+extension_name = 'MicroMime'
 
 # The destination
 dir_config(extension_name)

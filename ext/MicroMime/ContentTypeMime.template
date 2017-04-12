@@ -20,15 +20,13 @@
 
 %language=ANSI-C
 %define slot-name content_type
-%define hash-function-name mime_type_hash
-%define lookup-function-name lookup_mime_type_by_content_type
+%define hash-function-name lookup_by_content_type_hash
+%define lookup-function-name lookup_by_content_type_internal
 %enum
 %switch=4
-struct MimeType {
+struct ContentTypeMime {
 	const char * content_type;
+  const char * extension;
 	const char * encoding;
-	const char * extensions;
 };
-%%<?r mime_types.each do |mime_type|
-	content_type, encoding, extensions = mime_type.values_at('content-type', 'encoding', 'extensions') ?>
-#{content_type}, #{encoding.inspect}, #{extensions_struct(extensions)}<?r end ?>
+%%

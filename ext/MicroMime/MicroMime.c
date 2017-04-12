@@ -21,47 +21,25 @@
 // Include the Ruby headers and goodies
 #include "ruby.h"
 
-#include "Extensions.h"
-#include "MimeTypes.h"
+#include "ExtMime.h"
+#include "ContentTypeMime.h"
 
-VALUE MimeTypesMiniDatabase = Qnil;
-
-void Init_MimeTypesMiniDatabase();
-
-static VALUE method_content_type_for_extension(VALUE self, VALUE extension) {
-	long len = RSTRING_LEN(extension);
-	char* str = RSTRING_PTR(extension);
-
-	const struct ContentTypeExtension * result = lookup_content_type_by_extension(str, (unsigned)len);
-
-	if (result) {
-		return rb_str_new_cstr(result->content_type);
-	} else {
-		return Qnil;
-	}
-}
+void Init_MicroMime();
 
 VALUE MimeType = Qnil;
 
-static VALUE method_mime_type_for_content_type(VALUE self, VALUE content_type) {
-	long len = RSTRING_LEN(content_type);
-	char* str = RSTRING_PTR(content_type);
+static VALUE lookup_by_extension(VALUE self, VALUE extension) {
+	long len = RSTRING_LEN(extension);
+	char* str = RSTRING_PTR(extension);
 
-	const struct MimeType * result = lookup_mime_type_by_content_type(str, (unsigned)len);
+	const struct ExtMime * result = lookup_by_extension_internal(str, (unsigned)len);
 
 	if (result) {
 		VALUE args[3] = {
 			rb_str_new_cstr(result->content_type),
 			rb_str_new_cstr(result->encoding),
-			Qnil,
+			rb_str_new_cstr(result->extension)
 		};
-
-		if (result->extensions) {
-			args[2] = rb_str_split(
-				rb_str_new_cstr(result->extensions),
-				" "
-			);
-		}
 
 		return rb_class_new_instance(3, args, MimeType);
 	} else {
@@ -69,35 +47,48 @@ static VALUE method_mime_type_for_content_type(VALUE self, VALUE content_type) {
 	}
 }
 
-static ID id_content_type, id_encoding, id_extensions;
+static VALUE lookup_by_content_type(VALUE self, VALUE content_type) {
+	long len = RSTRING_LEN(content_type);
+	char* str = RSTRING_PTR(content_type);
 
-static VALUE MimeType_initialize(VALUE self, VALUE content_type, VALUE encoding, VALUE extensions) {
+	const struct ContentTypeMime * result = lookup_by_content_type_internal(str, (unsigned)len);
+
+	if (result) {
+		VALUE args[3] = {
+			rb_str_new_cstr(result->content_type),
+			rb_str_new_cstr(result->encoding),
+			rb_str_new_cstr(result->extension)
+		};
+
+		return rb_class_new_instance(3, args, MimeType);
+	} else {
+		return Qnil;
+	}
+}
+
+static ID id_content_type, id_encoding, id_extension;
+
+static VALUE MimeType_initialize(VALUE self, VALUE content_type, VALUE encoding, VALUE extension) {
 	rb_ivar_set(self, id_content_type, content_type);
 	rb_ivar_set(self, id_encoding, encoding);
-	rb_ivar_set(self, id_extensions, extensions);
+	rb_ivar_set(self, id_extension, extension);
 
 	return self;
 }
 
-void Init_MimeTypesMiniDatabase() {
+void Init_MicroMime() {
 	id_content_type = rb_intern("@content_type");
 	id_encoding = rb_intern("@encoding");
-	id_extensions = rb_intern("@extensions");
+	id_extension = rb_intern("@extension");
 
-	VALUE Mime = rb_define_module("Mime");
+	VALUE MicroMime = rb_define_module("MicroMime");
 
-	MimeType = rb_define_class_under(Mime, "Type", rb_cObject);
+	MimeType = rb_define_class_under(MicroMime, "Type", rb_cObject);
 	rb_define_attr(MimeType, "content_type", 1, 0);
 	rb_define_attr(MimeType, "encoding", 1, 0);
-	rb_define_attr(MimeType, "extensions", 1, 0);
+	rb_define_attr(MimeType, "extension", 1, 0);
 	rb_define_method(MimeType, "initialize", MimeType_initialize, 3);
 
-	VALUE MimeTypes = rb_define_module_under(Mime, "Types");
-
-	VALUE MimeTypesMini = rb_define_module_under(MimeTypes, "Mini");
-
-	MimeTypesMiniDatabase = rb_define_module_under(MimeTypesMini, "Database");
-
-	rb_define_module_function(MimeTypesMiniDatabase, "content_type_for_extension", method_content_type_for_extension, 1);
-	rb_define_module_function(MimeTypesMiniDatabase, "mime_type_for_content_type", method_mime_type_for_content_type, 1);
+	rb_define_module_function(MicroMime, "lookup_by_extension", lookup_by_extension, 1);
+	rb_define_module_function(MicroMime, "lookup_by_content_type", lookup_by_content_type, 1);
 }
