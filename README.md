@@ -41,22 +41,44 @@ MicroMime is optimised to minimize memory usage. It uses C extension and ideal h
 
 ```
 Memory stats for requiring mime/types/columnar
-Total allocated: 10706255 bytes (114134 objects)
-Total retained:  3472321 bytes (31907 objects)
+Total allocated: 10706215 bytes (114133 objects)
+Total retained:  3472281 bytes (31906 objects)
+
+Memory stats for requiring mini_mime
+Total allocated: 828369 bytes (8492 objects)
+Total retained:  59787 bytes (664 objects)
 
 Memory stats for requiring micro_mime
-Total allocated: 36161 bytes (200 objects)
-Total retained:  6309 bytes (16 objects)
+Total allocated: 36041 bytes (197 objects)
+Total retained:  6189 bytes (13 objects)
 Warming up --------------------------------------
 content_type lookup MicroMime
-                        42.534k i/100ms
+                        42.838k i/100ms
+cached content_type lookup MiniMime
+                        33.668k i/100ms
 content_type lookup Mime::Types
-                        21.905k i/100ms
+                        23.091k i/100ms
 Calculating -------------------------------------
 content_type lookup MicroMime
-                        504.929k (± 4.7%) i/s -      2.552M in   5.065908s
+                        533.235k (± 4.4%) i/s -      2.699M in   5.070920s
+cached content_type lookup MiniMime
+                        411.676k (± 4.8%) i/s -      2.087M in   5.082885s
 content_type lookup Mime::Types
-                        245.185k (± 3.8%) i/s -      1.227M in   5.010556s
+                        252.559k (± 3.6%) i/s -      1.270M in   5.035144s
+Warming up --------------------------------------
+content_type lookup MicroMime
+                        42.817k i/100ms
+uncached content_type lookup MiniMime
+                         1.794k i/100ms
+content_type lookup Mime::Types
+                        23.087k i/100ms
+Calculating -------------------------------------
+content_type lookup MicroMime
+                        491.401k (±10.2%) i/s -      2.441M in   5.026893s
+uncached content_type lookup MiniMime
+                         18.687k (± 4.4%) i/s -     93.288k in   5.002217s
+content_type lookup Mime::Types
+                        250.703k (± 4.0%) i/s -      1.270M in   5.073133s
 ```
 
 As a general guideline, cached lookups are 2x faster than MIME::Types equivelent. Uncached lookups are 10x slower.

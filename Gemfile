@@ -4,3 +4,4 @@ source 'https://rubygems.org'
 gemspec
 
 gem "mime-types", "~> 3" if RUBY_VERSION > '2'
+gem "mini_mime"
