@@ -49,7 +49,7 @@ module MiniMime
         extension.downcase!
         if extension.length > 0
           LOCK.synchronize do
-            @db ||= defined?(MicroMime) ? MicroMime : new
+            @db ||= new
             @db.lookup_by_extension(extension)
           end
         else
@@ -60,7 +60,7 @@ module MiniMime
 
     def self.lookup_by_content_type(content_type)
       LOCK.synchronize do
-        @db ||= defined?(MicroMime) ? MicroMime : new
+        @db ||= new
         @db.lookup_by_content_type(content_type)
       end
     end
@@ -142,9 +142,43 @@ module MiniMime
       end
     end
 
+    class CachedDb
+      MAX_CACHED = 100
+
+      def initialize(&lookup_method)
+        @lookup_method = lookup_method
+        @hit_cache = Cache.new(MAX_CACHED)
+        @miss_cache = Cache.new(MAX_CACHED)
+      end
+
+      def lookup(val)
+        @hit_cache.fetch(val) do
+          @miss_cache.fetch(val) do
+            data = lookup_uncached(val)
+            if data
+              @hit_cache[val] = data
+            else
+              @miss_cache[val] = nil
+            end
+
+            data
+          end
+        end
+      end
+
+      def lookup_uncached(val)
+        @lookup_method.call(val)
+      end
+    end
+
     def initialize
-      @ext_db = RandomAccessDb.new("ext_mime.db", 0)
-      @content_type_db = RandomAccessDb.new("content_type_mime.db", 1)
+      if defined?(MicroMime)
+        @ext_db = CachedDb.new(&MicroMime.method(:lookup_by_extension))
+        @content_type_db = CachedDb.new(&MicroMime.method(:lookup_by_content_type))
+      else
+        @ext_db = RandomAccessDb.new("ext_mime.db", 0)
+        @content_type_db = RandomAccessDb.new("content_type_mime.db", 1)
+      end
     end
 
     def lookup_by_extension(extension)

@@ -38,6 +38,9 @@ module MiniMime
     class RandomAccessDb
       alias_method :lookup, :lookup_uncached
     end
+    class CachedDb
+      alias_method :lookup, :lookup_uncached
+    end
   end
 end
 
