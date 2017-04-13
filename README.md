@@ -1,4 +1,4 @@
-# MicroMime
+# MicroMime [![Travis](https://img.shields.io/travis/stereobooster/micro_mime.svg)](https://travis-ci.org/stereobooster/micro_mime)
 
 This is the fork of [MiniMime](https://github.com/discourse/mini_mime) with C extension ported from [mime-types-mini](https://github.com/ioquatix/mime-types-mini/).
 
