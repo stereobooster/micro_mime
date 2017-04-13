@@ -25,7 +25,7 @@ Or install it yourself as:
 ```
 require 'micro_mime'
 
-MicroMime.lookup_by_extension("txt").content_type
+MicroMime.lookup_by_filename("a.txt").content_type
 # => "text/plain"
 
 MicroMime.lookup_by_content_type("text/plain").extension
@@ -33,7 +33,6 @@ MicroMime.lookup_by_content_type("text/plain").extension
 
 MicroMime.lookup_by_content_type("text/plain").binary?
 # => false
-
 ```
 
 ## Performance
@@ -42,22 +41,22 @@ MicroMime is optimised to minimize memory usage. It uses C extension and ideal h
 
 ```
 Memory stats for requiring mime/types/columnar
-Total allocated: 10706215 bytes (114133 objects)
-Total retained:  3472281 bytes (31906 objects)
+Total allocated: 10706255 bytes (114134 objects)
+Total retained:  3472321 bytes (31907 objects)
 
 Memory stats for requiring micro_mime
-Total allocated: 33442 bytes (182 objects)
-Total retained:  4653 bytes (14 objects)
+Total allocated: 36161 bytes (200 objects)
+Total retained:  6309 bytes (16 objects)
 Warming up --------------------------------------
 content_type lookup MicroMime
-                       111.490k i/100ms
+                        42.534k i/100ms
 content_type lookup Mime::Types
-                        17.279k i/100ms
+                        21.905k i/100ms
 Calculating -------------------------------------
 content_type lookup MicroMime
-                          1.777M (± 8.6%) i/s -      8.808M in   5.003187s
+                        504.929k (± 4.7%) i/s -      2.552M in   5.065908s
 content_type lookup Mime::Types
-                        237.226k (± 7.9%) i/s -      1.192M in   5.061223s
+                        245.185k (± 3.8%) i/s -      1.227M in   5.010556s
 ```
 
 As a general guideline, cached lookups are 2x faster than MIME::Types equivelent. Uncached lookups are 10x slower.

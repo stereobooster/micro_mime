@@ -25,7 +25,7 @@ puts "Total retained:  #{result.total_retained_memsize} bytes (#{result.total_re
 
 Benchmark.ips do |bm|
   bm.report 'content_type lookup MicroMime' do
-    MicroMime.lookup_by_extension("txt").content_type
+    MicroMime.lookup_by_filename("a.txt").content_type
   end
 
   bm.report 'content_type lookup Mime::Types' do
